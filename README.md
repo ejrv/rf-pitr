@@ -1,2 +1,2 @@
 # rf-uit
-retrive.file//upload.it.there
+retrive.file//push.it.to.releases
