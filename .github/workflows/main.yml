@@ -1,27 +1,26 @@
-name: Mirror File
+name: rf-pitr
 
 on:
   workflow_dispatch:
     inputs:
       file_url:
-        description: 'File URL?'
+        description: 'url'
         required: true
 
 jobs:
-  mirror:
+  upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Download File
         run: |
-          wget -O downloaded_file.ext ${{ github.event.inputs.file_url }}
-
-      - name: Add and Commit
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add downloaded_file.ext
-          git commit -m "Added new file from mirror"
-          git push
+          
+          curl -L -o file.zip ${{ inputs.file_url }}
+          
+          FILE_NAME=$(basename ${{ inputs.file_url }})
+          
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: file.zip
+          tag_name: "latest-mirror" 
+          token: ${{ secrets.GITHUB_TOKEN }} 
