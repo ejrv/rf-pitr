@@ -4,23 +4,34 @@ on:
   workflow_dispatch:
     inputs:
       file_url:
-        description: 'url'
+        description: 'url? (must start with http or https)'
         required: true
 
 jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Download File
+      - name: download file
         run: |
           
-          curl -L -o file.zip ${{ inputs.file_url }}
           
           FILE_NAME=$(basename ${{ inputs.file_url }})
+          echo "downloading $FILE_NAME..."
           
-      - name: Create Release and Upload Asset
+          
+          curl -L --retry 3 --retry-delay 5 -o "$FILE_NAME" "${{ inputs.file_url }}"
+          
+          
+          if [ ! -f "$FILE_NAME" ]; then
+            echo "error: file download failed."
+            exit 1
+          fi
+          
+          ls -lh "$FILE_NAME"
+
+      - name: create release and upload asset
         uses: softprops/action-gh-release@v1
         with:
-          files: file.zip
-          tag_name: "latest-mirror" 
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          files: ${{ github.event.inputs.file_url }}
+          tag_name: "auto-mirror-${{ github.run_number }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
